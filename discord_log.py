@@ -1,8 +1,11 @@
 import os
+import discord
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import gspread
 from gspread_formatting import set_column_width
+
+
 class Log:
     def __init__(self):
         SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -39,7 +42,6 @@ class Log:
                 logs[guild_id][channel_id]['row'] = self.sheets_client.open_by_key(sheet_id).sheet1.row_count
         return logs
 
-
     def __make_first_row(self, sheet):
         sheet.resize(rows=2, cols=6)
         sheet.update('A1', [['Date', 'Author', 'Message', 'Attached Files', 'Author ID', 'Message ID']])
@@ -73,8 +75,11 @@ class Log:
             }
 
         if message.channel.id not in self.logs[message.guild.id].keys():
+            name = f'{message.channel.name} ({message.channel.id})'
+            if type(message.channel) == discord.Thread:
+                name = f'*thread* {name}'
             body = {
-                'name': f'{message.channel.name} ({message.channel.id})',
+                'name': name,
                 'parents': [self.logs[message.guild.id]['drive_folder_id']],
                 'mimeType': 'application/vnd.google-apps.spreadsheet'
             }
@@ -99,7 +104,7 @@ class Log:
         channel = self.logs[message.guild.id][message.channel.id]
         sheet = self.sheets_client.open_by_key(channel['sheet_id']).sheet1
         channel['row'] += 1
-        sheet.resize(channel['row'], 6)     # temporary
+        sheet.resize(channel['row'], 6)  # temporary
 
         files = ''
         if len(message.attachments) > 0:

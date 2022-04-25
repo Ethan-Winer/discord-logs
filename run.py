@@ -1,27 +1,27 @@
 import discord
 import os
 import discord_log
-
-logs = discord_log.Log()
+from pprint import pprint
 
 class MyClient(discord.Client):
     def __init__(self, intents):
         super().__init__(intents=intents)
+        self.logs = discord_log.Log()
 
     async def on_ready(self):
-        print('Logged on as', self.user)
-        # self.intents.guilds = True
-        # self.intents.messages = True
+        print('Logged in as', self.user)
 
+    async def on_thread_delete(self, thread):
+        print('rip thread')
 
     async def on_thread_join(self, thread):
-        print('new thread')
         await thread.join()
+        print('thread join')
 
     async def on_message(self, message):
-        logs.log(message)
-
-
+        # self.logs.log(message)
+        # print(type(message.channel) == discord.Thread)
+        return
 intents = discord.Intents.all()
 client = MyClient(intents)
 client.run(os.getenv('test_bot_pog_token'))
