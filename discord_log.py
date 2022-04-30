@@ -6,6 +6,7 @@ import gspread
 from gspread_formatting import set_column_width
 import pickle
 
+
 class Log:
     def __init__(self):
         SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -98,7 +99,7 @@ class Log:
     #         str(message.id)
     #     ]]
     #     sheet.update(f'A{channel["row"]}', content)
-    def __create_new_guild_log(self, guild):
+    def __log_new_guild(self, guild):
         body = {
             'name': f'{guild.name} ({guild.id})',
             'parents': ['1psHvV-6_U8cgpsF1vlr322aXD9uRnDjp'],
@@ -110,7 +111,8 @@ class Log:
             'drive_folder_id': drive_id,
             'guild_name': guild.name
         }
-    def __create_new_channel_log(self, channel):
+
+    def log_new_channel(self, channel):
         isChannel = type(channel) == discord.TextChannel
         guild = channel.guild
         name = f'{channel.name} ({channel.id})'
@@ -125,7 +127,6 @@ class Log:
         }
         sheet_id = self.drive_client.files().create(body=body).execute()['id']
         sheet = self.sheets_client.open_by_key(sheet_id)
-
 
         self.logs[guild.id][channel.id] = {
             'name': channel.name,
@@ -149,19 +150,19 @@ class Log:
         if isChannel:
             sheet.add_worksheet(title='Threads', rows=100, cols=4)
 
-    def log(self, message):
+    def log_new_message(self, message):
         if message.guild.id not in self.logs.keys():
-            self.__create_new_guild_log(message.guild)
+            self.__log_new_guild(message.guild)
         if message.channel.id not in self.logs[message.guild.id].keys():
-            self.__create_new_channel_log(message.channel)
+            self.log_new_channel(message.channel)
 
+        channel = self.logs[message.guild.id][message.channel.id]
+        sheet = self.sheets_client.open_by_key(channel['sheet_id']).sheet1
+        channel['row'] += 1
+        sheet.resize(channel['row'], 6)  # temporary
+        content = []
         match message.type:
             case discord.MessageType.default:
-                channel = self.logs[message.guild.id][message.channel.id]
-                sheet = self.sheets_client.open_by_key(channel['sheet_id']).sheet1
-                channel['row'] += 1
-                sheet.resize(channel['row'], 6)  # temporary
-
                 files = ''
                 if len(message.attachments) > 0:
                     for file in message.attachments:
@@ -175,5 +176,7 @@ class Log:
                     str(message.author.id),
                     str(message.id)
                 ]]
-                sheet.update(f'A{channel["row"]}', content)
+        self.update_worksheet(sheet, channel['row'], content)
 
+    def update_worksheet(self, worksheet, row, content):
+        worksheet.update(f'A{row}', content)
