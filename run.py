@@ -19,18 +19,23 @@ class MyClient(discord.Client):
     #         print('archived')
     #
     async def on_thread_join(self, thread):
-        await thread.join()
-        self.logs.log_new_channel(thread)
-        parent = self.logs.logs[thread.guild.id][thread.parent.id]
-        worksheet = parent['sheet_id']
-        row = parent['row']
-        thread_worksheet = self.logs.logs[thread.guild.id][thread.id]['sheet_id']
-        content = [[
-            thread.created_at.strftime('%x %X'),
-            '*Server*',
-            f'{thread.owner.name} created a new thread {thread_worksheet.url}',
-        ]]
-        self.logs.update_worksheet(worksheet, row, content)
+        if thread.id not in self.logs.logs[thread.guild.id].keys():
+            await thread.join()
+            # print('making new thread file')
+            # self.logs.log_new_channel(thread)
+            # print('finished new thread file')
+            #
+            # parent = self.logs.logs[thread.guild.id][thread.parent.id]
+            # worksheet = parent['sheet_id']
+            # row = parent['row']
+            # thread_worksheet = self.logs.logs[thread.guild.id][thread.id]['sheet_id']
+            #
+            # content = [[
+            #     thread.created_at.strftime('%x %X'),
+            #     '*Server*',
+            #     f'{thread.owner.name} created a new thread {thread_worksheet}',
+            # ]]
+            # self.logs.update_worksheet(worksheet, row, content)
 
     async def on_message(self, message):
         self.logs.log_new_message(message)
