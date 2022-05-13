@@ -1,4 +1,3 @@
-import os
 import discord
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -129,5 +128,8 @@ class Log:
                 ]]
                 self.update_worksheet(spreadsheet.sheet1, row, a_content)
 
+                # need to implement adding thread to list on thread worksheet
+                self.update_worksheet(spreadsheet.get_worksheet(1), parent['thread_count'], [[message.created_at.strftime('%x %X'), message.channel.name]])
+
         print(message.reference)
-        message.guild.f
+        # message.guild.f
